@@ -4,42 +4,41 @@ import styled from 'styled-components/macro';
 
 interface Props {
   extractedText: string;
+  onSummarizedText: (summary: string) => void; // Callback to pass summary back to parent
 }
 
-export const SummaryDisplay = ({ extractedText }: Props) => {
-  const [summary, setSummary] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export const SummaryDisplay = ({ extractedText, onSummarizedText }: Props) => {
   const [summaryLength, setSummaryLength] = useState<string>('short'); // Default summary length
   const [loading, setLoading] = useState<boolean>(false); // Loading state
+  const [error, setError] = useState<string | null>(null); // Error state
 
   const handleSummarize = async () => {
-    setLoading(true); // Set loading state to true
-    setError(null); // Reset error message
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await axios.post('http://localhost:5000/summarize', {
         text: extractedText,
-        length: summaryLength, // Send the selected summary length
+        length: summaryLength,
       });
 
-      // Assuming the response contains the summary text
-      setSummary(response.data.summary);
+      // Pass the summary back to the parent component via the callback
+      onSummarizedText(response.data.summary);
     } catch (err) {
       setError('Failed to generate summary');
       console.error(err);
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
   return (
     <Div>
       <h3>Summary</h3>
-      <p>{extractedText}</p>
 
       {/* Summary Length Selector */}
-      <div>
-        <label htmlFor="summaryLength">Select summary length: </label>
+      <SelectorWrapper>
+        <label htmlFor="summaryLength">Select summary length:</label>
         <select
           id="summaryLength"
           value={summaryLength}
@@ -49,35 +48,77 @@ export const SummaryDisplay = ({ extractedText }: Props) => {
           <option value="medium">Medium</option>
           <option value="long">Long</option>
         </select>
-      </div>
+      </SelectorWrapper>
 
       {/* Summarize Button */}
-      <button onClick={handleSummarize} disabled={loading}>
+      <Button onClick={handleSummarize} disabled={loading}>
         {loading ? 'Generating Summary...' : 'Summarize'}
-      </button>
+      </Button>
 
       {/* Error and Summary Display */}
       {error && <ErrorMessage>{error}</ErrorMessage>}
-      {summary && <Summary>{summary}</Summary>}
     </Div>
   );
 };
 
 const Div = styled.div`
-  padding: 1rem;
+  padding: 2rem;
   background-color: #e0f7fa;
   border: 1px solid #00bcd4;
   max-width: 600px;
-  margin: 0 auto;
+  margin: 2rem auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const SelectorWrapper = styled.div`
+  margin-bottom: 1rem;
+
+  label {
+    font-size: 1rem;
+    color: #333;
+    margin-right: 1rem;
+  }
+
+  select {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid #00bcd4;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:focus {
+      border-color: #008c9e;
+      outline: none;
+    }
+  }
+`;
+
+const Button = styled.button`
+  padding: 0.8rem 1.5rem;
+  background-color: #00bcd4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+  width: 100%;
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    background-color: #008c9e;
+  }
 `;
 
 const ErrorMessage = styled.p`
   color: red;
   font-size: 0.875rem;
-`;
-
-const Summary = styled.p`
-  color: green;
-  font-size: 1rem;
-  font-weight: bold;
+  margin-top: 1rem;
 `;
