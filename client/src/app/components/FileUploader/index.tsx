@@ -54,6 +54,8 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
 
   // Handle file upload
   const handleUpload = async () => {
+    console.log('API Base URL:', process.env.REACT_APP_API_BASE_URL);
+
     if (!file) return;
 
     setIsUploading(true); // Set uploading state to true
@@ -65,7 +67,7 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
     try {
       // Upload file to the backend
       const uploadResponse = await axios.post(
-        'http://localhost:5000/upload',
+        `${process.env.REACT_APP_API_BASE_URL}/upload`,
         formData,
         {
           headers: {
@@ -103,8 +105,10 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
     try {
       // Extract text from the uploaded file
       const extractResponse = await axios.post(
-        'http://localhost:5000/extract',
-        { fileId },
+        `${process.env.REACT_APP_API_BASE_URL}/extract`,
+        {
+          fileId,
+        },
       );
 
       // Pass extracted text to the parent component
@@ -173,6 +177,10 @@ const Container = styled.div`
   padding: 1rem;
   background-color: #e0f7fa;
   border: 1px solid #00bcd4;
+
+  @media (max-width: 600px) {
+    padding: 0.5rem;
+  }
 `;
 
 const DropzoneWrapper = styled.div<{ isDragging: boolean; hasError: boolean }>`
@@ -224,6 +232,13 @@ const DropzoneWrapper = styled.div<{ isDragging: boolean; hasError: boolean }>`
     font-size: 1rem;
     color: ${props => (props.hasError ? 'red' : '#666')};
   }
+
+  @media (max-width: 600px) {
+    padding: 1rem;
+    p {
+      font-size: 0.9rem;
+    }
+  }
 `;
 
 const Button = styled.button`
@@ -233,14 +248,20 @@ const Button = styled.button`
   color: white;
   border: none;
   cursor: pointer;
+  width: 100%;
 
   &:disabled {
     background-color: #cccccc;
   }
+
+  @media (max-width: 600px) {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
 `;
 
 const RemoveButton = styled(Button)`
-  background-color: #f44336; /* Red color for remove button */
+  background-color: #f44336;
   margin-top: 1rem;
   &:hover {
     background-color: #d32f2f;

@@ -43,7 +43,11 @@ exports.extractTextFromFile = async (req, res) => {
       return res.status(200).json({ extractedText: pdfData.text });
     } else if ([".jpg", ".jpeg", ".png"].includes(fileExtension)) {
       // For images, use Tesseract OCR to extract text
-      const { data: { text } } = await tesseract.recognize(fileBuffer, "eng");
+      // Ensure Tesseract is properly configured with the correct path to the WASM file
+      const { data: { text } } = await tesseract.recognize(fileBuffer, "eng", {
+        logger: (m) => console.log(m),
+        corePath: path.join(__dirname, 'node_modules/tesseract.js-core/tesseract-core-simd.wasm') // Explicitly set the WASM file path
+      });
       return res.status(200).json({ extractedText: text });
     } else {
       return res.status(400).json({ error: "Unsupported file type. Only PDF and images are allowed." });

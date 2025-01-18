@@ -17,10 +17,13 @@ export const SummaryDisplay = ({ extractedText, onSummarizedText }: Props) => {
     setError(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/summarize', {
-        text: extractedText,
-        length: summaryLength,
-      });
+      const response = await axios.post(
+        'https://document-summary-assistant.vercel.app/summarize',
+        {
+          text: extractedText,
+          length: summaryLength,
+        },
+      );
 
       // Pass the summary back to the parent component via the callback
       onSummarizedText(response.data.summary);
@@ -62,13 +65,19 @@ export const SummaryDisplay = ({ extractedText, onSummarizedText }: Props) => {
 };
 
 const Div = styled.div`
-  padding: 2rem;
+  padding: 1.5rem;
   background-color: #e0f7fa;
   border: 1px solid #00bcd4;
   max-width: 600px;
-  margin: 2rem auto;
+  margin: 1rem auto;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    margin: 1rem;
+    max-width: 90%;
+  }
 `;
 
 const SelectorWrapper = styled.div`
@@ -77,7 +86,11 @@ const SelectorWrapper = styled.div`
   label {
     font-size: 1rem;
     color: #333;
-    margin-right: 1rem;
+    margin-right: 0.5rem;
+
+    @media (max-width: 768px) {
+      font-size: 0.9rem;
+    }
   }
 
   select {
@@ -91,6 +104,11 @@ const SelectorWrapper = styled.div`
     &:focus {
       border-color: #008c9e;
       outline: none;
+    }
+
+    @media (max-width: 768px) {
+      font-size: 0.9rem;
+      padding: 0.4rem;
     }
   }
 `;
@@ -115,10 +133,19 @@ const Button = styled.button`
   &:not(:disabled):hover {
     background-color: #008c9e;
   }
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    padding: 0.7rem;
+  }
 `;
 
 const ErrorMessage = styled.p`
   color: red;
   font-size: 0.875rem;
   margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 `;
