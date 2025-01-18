@@ -16,4 +16,7 @@ app.post("/extract", extractTextFromFile);
 app.post("/summarize", generateSummary);
 
 // Start the server
-module.exports = app;
+const PORT = 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
