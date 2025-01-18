@@ -65,7 +65,7 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
     try {
       // Upload file to the backend
       const uploadResponse = await axios.post(
-        'https://document-summary-assistant.vercel.app/upload',
+        'http://localhost:5000/upload',
         formData,
         {
           headers: {
