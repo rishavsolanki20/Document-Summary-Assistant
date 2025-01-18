@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
+const cors = require('cors');
 
 const { handleUpload } = require("./src/controllers/uploadController");
 const { extractTextFromFile } = require("./src/controllers/extractionController");
@@ -9,6 +10,13 @@ const { generateSummary } = require("./src/controllers/summaryController");
 const app = express();
 
 app.use(express.json());
+
+app.use(cors({
+  origin: '*', // Or specify your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 
 // Routes
 app.post("/upload", upload.single("file"), handleUpload);
