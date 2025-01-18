@@ -25,12 +25,25 @@ exports.extractTextFromFile = async (req, res) => {
 
     const { file_path: filePath, file_extension: fileExtension } = data;
 
+    // Get the file from Supabase Storage
+    const { data: fileData, error: fileError } = await supabase.storage
+      .from("uploads")  // your bucket name
+      .download(filePath); // file path from the database
+
+    if (fileError) {
+      throw new Error(`Error downloading file from storage: ${fileError.message}`);
+    }
+
+    // Convert the file data to a Buffer (if it's not already)
+    const fileBuffer = Buffer.from(await fileData.arrayBuffer());
+
     if (fileExtension === ".pdf") {
-      const dataBuffer = fs.readFileSync(filePath);
-      const pdfData = await pdfParse(dataBuffer);
+      // Parse the PDF file
+      const pdfData = await pdfParse(fileBuffer);
       return res.status(200).json({ extractedText: pdfData.text });
     } else if ([".jpg", ".jpeg", ".png"].includes(fileExtension)) {
-      const { data: { text } } = await tesseract.recognize(filePath, "eng");
+      // For images, use Tesseract OCR to extract text
+      const { data: { text } } = await tesseract.recognize(fileBuffer, "eng");
       return res.status(200).json({ extractedText: text });
     } else {
       return res.status(400).json({ error: "Unsupported file type. Only PDF and images are allowed." });
