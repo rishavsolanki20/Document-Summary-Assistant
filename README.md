@@ -46,3 +46,9 @@ npm start
 
 **URL**
 https://document-summary-assistant.netlify.app/
+
+## Approach
+
+The backend of the project is built using Node.js with Express, handling file uploads, text extraction, and summarization. Users can upload files (PDFs, images) via the /upload route, and the backend processes these files using Tesseract.js for OCR and pdf-parse for PDF text extraction. The extracted text is then sent to the /summarize route, where the Lama 3 AI model generates a concise summary of the content, providing valuable insights from long documents. The backend also uses Supabase for storing and managing the uploaded files.
+
+The frontend is developed using React, providing a seamless and interactive interface for users. It enables file uploads, displays extracted text, and shows the AI-generated summaries. The React app interacts with the backend API to facilitate these operations, allowing users to upload files, view extracted content, and generate summaries with a simple, intuitive UI. This integration of backend functionalities with a user-friendly frontend makes the entire process efficient and easy to use, ensuring a smooth experience for the users.
