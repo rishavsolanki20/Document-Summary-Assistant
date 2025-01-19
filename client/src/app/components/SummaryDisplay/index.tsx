@@ -1,16 +1,22 @@
+/* eslint-disable prettier/prettier */
 import React, { useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components/macro';
 
 interface Props {
   extractedText: string;
-  onSummarizedText: (summary: string) => void; // Callback to pass summary back to parent
+  onSummarizedText: (summary: string) => void;
+  onGenerateSummary: () => void; // Callback to notify parent when summary is generated
 }
 
-export const SummaryDisplay = ({ extractedText, onSummarizedText }: Props) => {
-  const [summaryLength, setSummaryLength] = useState<string>('short'); // Default summary length
-  const [loading, setLoading] = useState<boolean>(false); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+export const SummaryDisplay = ({
+  extractedText,
+  onSummarizedText,
+  onGenerateSummary,
+}: Props) => {
+  const [summaryLength, setSummaryLength] = useState<string>('short');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSummarize = async () => {
     setLoading(true);
@@ -25,8 +31,8 @@ export const SummaryDisplay = ({ extractedText, onSummarizedText }: Props) => {
         },
       );
 
-      // Pass the summary back to the parent component via the callback
       onSummarizedText(response.data.summary);
+      onGenerateSummary(); // Notify parent when summary is generated
     } catch (err) {
       setError('Failed to generate summary');
       console.error(err);
@@ -37,9 +43,8 @@ export const SummaryDisplay = ({ extractedText, onSummarizedText }: Props) => {
 
   return (
     <Div>
-      <h3>Summary</h3>
+      <StyledHeading>Summary</StyledHeading>
 
-      {/* Summary Length Selector */}
       <SelectorWrapper>
         <label htmlFor="summaryLength">Select summary length:</label>
         <select
@@ -53,12 +58,10 @@ export const SummaryDisplay = ({ extractedText, onSummarizedText }: Props) => {
         </select>
       </SelectorWrapper>
 
-      {/* Summarize Button */}
       <Button onClick={handleSummarize} disabled={loading}>
         {loading ? 'Generating Summary...' : 'Summarize'}
       </Button>
 
-      {/* Error and Summary Display */}
       {error && <ErrorMessage>{error}</ErrorMessage>}
     </Div>
   );
@@ -66,8 +69,7 @@ export const SummaryDisplay = ({ extractedText, onSummarizedText }: Props) => {
 
 const Div = styled.div`
   padding: 1.5rem;
-  background-color: #e0f7fa;
-  border: 1px solid #00bcd4;
+  border: 1px solid #9ee6a4;
   max-width: 600px;
   margin: 1rem auto;
   border-radius: 8px;
@@ -80,6 +82,25 @@ const Div = styled.div`
   }
 `;
 
+const StyledHeading = styled.h3`
+  position: relative;
+  font-size: 2rem;
+  text-align: center;
+  color: #000000;
+  z-index: 1;
+
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 35%;
+    width: 30%;
+    height: 50%;
+    background-color: #9ee6a4;
+    z-index: -1;
+  }
+`;
+
 const SelectorWrapper = styled.div`
   margin-bottom: 1rem;
 
@@ -87,35 +108,24 @@ const SelectorWrapper = styled.div`
     font-size: 1rem;
     color: #333;
     margin-right: 0.5rem;
-
-    @media (max-width: 768px) {
-      font-size: 0.9rem;
-    }
   }
 
   select {
     padding: 0.5rem;
     font-size: 1rem;
     border-radius: 4px;
-    border: 1px solid #00bcd4;
     cursor: pointer;
     transition: all 0.3s ease;
 
     &:focus {
-      border-color: #008c9e;
       outline: none;
-    }
-
-    @media (max-width: 768px) {
-      font-size: 0.9rem;
-      padding: 0.4rem;
     }
   }
 `;
 
 const Button = styled.button`
   padding: 0.8rem 1.5rem;
-  background-color: #00bcd4;
+  background: linear-gradient(135deg, #5dd667, #aae59c, #4caf50, #388e3c);
   color: white;
   border: none;
   border-radius: 4px;
@@ -131,12 +141,7 @@ const Button = styled.button`
   }
 
   &:not(:disabled):hover {
-    background-color: #008c9e;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-    padding: 0.7rem;
+    background-color: #388e3c;
   }
 `;
 
@@ -144,8 +149,4 @@ const ErrorMessage = styled.p`
   color: red;
   font-size: 0.875rem;
   margin-top: 1rem;
-
-  @media (max-width: 768px) {
-    font-size: 0.8rem;
-  }
 `;

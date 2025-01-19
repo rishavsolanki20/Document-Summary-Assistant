@@ -11,7 +11,8 @@ interface Props {
 export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
   const [file, setFile] = useState<File | null>(null);
   const [fileId, setFileId] = useState<string | null>(null); // Store the file ID
-  const [isUploading, setIsUploading] = useState(false); // Uploading state
+  const [isUploadingFile, setIsUploadingFile] = useState(false); // Uploading state for file
+  const [isExtractingText, setIsExtractingText] = useState(false); // Extracting text state
   const [error, setError] = useState<string>(''); // Store error messages
   const [isDragging, setIsDragging] = useState(false); // Track drag state
   const [isUploaded, setIsUploaded] = useState(false); // Track whether the file is uploaded
@@ -54,11 +55,9 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
 
   // Handle file upload
   const handleUpload = async () => {
-    console.log('API Base URL:', process.env.REACT_APP_API_BASE_URL);
-
     if (!file) return;
 
-    setIsUploading(true); // Set uploading state to true
+    setIsUploadingFile(true); // Set uploading state for file to true
     setError(''); // Reset any previous errors
 
     const formData = new FormData();
@@ -89,7 +88,7 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
           : 'An error occurred while uploading the file.',
       );
     } finally {
-      setIsUploading(false); // Reset uploading state
+      setIsUploadingFile(false); // Reset uploading state
     }
   };
 
@@ -100,7 +99,7 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
       return;
     }
 
-    setIsUploading(true);
+    setIsExtractingText(true); // Set extracting text state to true
 
     try {
       // Extract text from the uploaded file
@@ -121,7 +120,7 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
           : 'An error occurred while extracting text.',
       );
     } finally {
-      setIsUploading(false);
+      setIsExtractingText(false); // Reset extracting text state
     }
   };
 
@@ -148,23 +147,33 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
         </p>
       </DropzoneWrapper>
 
+      {/* Upload button */}
       <Button
         onClick={handleUpload}
-        disabled={isUploading || !file || isUploaded}
+        disabled={isUploadingFile || !file || isUploaded}
+        isActive={!!file} // Apply active style based on file existence
       >
-        {isUploading
+        {isUploadingFile
           ? 'Uploading...'
           : isUploaded
           ? 'File Uploaded'
           : 'Upload File'}
       </Button>
-      <Button onClick={handleExtract} disabled={!fileId || isUploading}>
-        {isUploading ? 'Processing...' : 'Extract Text'}
-      </Button>
 
-      {/* Add a remove file button if a file is selected and uploaded */}
-      {file && !isUploading && !isUploaded && (
-        <RemoveButton onClick={handleRemoveFile}>Remove File</RemoveButton>
+      {/* Extract button */}
+      <ExtractButton
+        onClick={handleExtract}
+        disabled={!fileId || isExtractingText}
+        isActive={!!fileId}
+      >
+        {isExtractingText ? 'Processing...' : 'Extract Text'}
+      </ExtractButton>
+
+      {/* Remove file button */}
+      {file && !isUploadingFile && !isUploaded && (
+        <RemoveButton onClick={handleRemoveFile} isActive={true}>
+          Remove File
+        </RemoveButton>
       )}
 
       {/* Display error message */}
@@ -175,8 +184,7 @@ export const FileUploader: React.FC<Props> = ({ onExtractedText }) => {
 
 const Container = styled.div`
   padding: 1rem;
-  background-color: #e0f7fa;
-  border: 1px solid #00bcd4;
+  border-radius: 5px;
 
   @media (max-width: 600px) {
     padding: 0.5rem;
@@ -187,13 +195,17 @@ const DropzoneWrapper = styled.div<{ isDragging: boolean; hasError: boolean }>`
   padding: 2rem;
   border: 3px dashed
     ${props =>
-      props.hasError ? 'red' : props.isDragging ? '#00bcd4' : '#cccccc'};
+      props.hasError ? 'red' : props.isDragging ? '#000000' : '#5dd667'};
   background-color: ${props => (props.isDragging ? '#e0f7fa' : 'transparent')};
   text-align: center;
   margin-bottom: 1rem;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  border-radius: 5px;
+
+  /* Ensuring border consistency by not altering the padding */
+  box-sizing: border-box;
 
   /* Center content */
   display: flex;
@@ -206,7 +218,7 @@ const DropzoneWrapper = styled.div<{ isDragging: boolean; hasError: boolean }>`
     content: '+';
     font-size: 3rem;
     color: ${props =>
-      props.hasError ? 'red' : props.isDragging ? '#00bcd4' : '#cccccc'};
+      props.hasError ? 'red' : props.isDragging ? '#000000' : '#5dd667'};
     animation: ${props => (props.isDragging ? 'pulse 1.5s infinite' : 'none')};
   }
 
@@ -241,17 +253,27 @@ const DropzoneWrapper = styled.div<{ isDragging: boolean; hasError: boolean }>`
   }
 `;
 
-const Button = styled.button`
+const Button = styled.button<{ isActive: boolean }>`
   margin-right: 1rem;
   padding: 0.5rem 1rem;
-  background-color: #00bcd4;
+  background: ${props =>
+    props.isActive
+      ? 'linear-gradient(135deg, #1b1b1b, #4c4c4c, #9e9e9e, #4c4c4c,#2d2d2d, #1b1b1b)' // Dark at edges, greyish in the center
+      : '#cccccc'};
   color: white;
   border: none;
   cursor: pointer;
   width: 100%;
+  margin: 5px;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+
+  font-size: 20px; /* Set font size */
+  font-family: 'SofiaSans-Bold', sans-serif; /* Set font family */
 
   &:disabled {
-    background-color: #cccccc;
+    background-color: #cccccc; /* Solid color for disabled state */
+    cursor: not-allowed;
   }
 
   @media (max-width: 600px) {
@@ -260,16 +282,29 @@ const Button = styled.button`
   }
 `;
 
-const RemoveButton = styled(Button)`
-  background-color: #f44336;
-  margin-top: 1rem;
-  &:hover {
-    background-color: #d32f2f;
+const ExtractButton = styled(Button)`
+  background: ${props =>
+    props.isActive
+      ? 'linear-gradient(135deg, #5dd667, #aae59c, #4caf50, #388e3c)'
+      : '#cccccc'};
+
+  &:disabled {
+    background-color: #cccccc; /* Disabled color */
   }
 `;
 
-const ErrorMessage = styled.div`
+const RemoveButton = styled(Button)`
+  background: #f44336; /* Red background for remove button */
   margin-top: 1rem;
+
+  &:disabled {
+    background-color: #cccccc; /* Disabled color */
+  }
+`;
+
+const ErrorMessage = styled.p`
   color: red;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  margin-top: 1rem;
+  text-align: center;
 `;
