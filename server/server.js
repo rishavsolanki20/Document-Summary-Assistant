@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const cors = require('cors');
+const path = require('path');                       // ← added
 
 const { handleUpload } = require("./src/controllers/uploadController");
 const { extractTextFromFile } = require("./src/controllers/extractionController");
@@ -19,10 +20,22 @@ app.use(cors({
 // Configure multer to use memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Routes
+// API Routes (must stay above the SPA fallback)
 app.post("/upload", upload.single("file"), handleUpload);
 app.post("/extract", extractTextFromFile);
 app.post("/summarize", generateSummary);
+
+// --- Static React build serving ---
+app.use(express.static(path.join(__dirname, 'public')));
+
+// SPA fallback: any non-API GET request returns index.html so React Router works
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+  // Skip paths that belong to the API so we don't swallow them
+  const apiPrefixes = ['/upload', '/extract', '/summarize'];
+  if (apiPrefixes.some(p => req.path.startsWith(p))) return next();
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Start the server
 const PORT = process.env.PORT || 5000;
