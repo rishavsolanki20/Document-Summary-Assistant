@@ -14,7 +14,7 @@ concurrency:
 
 env:
   CONTROLLER_URL: http://127.0.0.1:8088
-  APP_PORT: "5000"
+  APP_PORT: 5000
 
 jobs:
   deploy:
@@ -27,53 +27,71 @@ jobs:
 
       - name: Create or update preview
         id: preview
-        env:
-          TOKEN: ${{ secrets.PREVIEW_CONTROLLER_TOKEN }}
-          REPO_NAME: ${{ github.event.repository.name }}
-          PR: ${{ github.event.pull_request.number }}
         shell: powershell
         run: |
-          $bodyData = @{
-              repo = $env:REPO_NAME
-              pr = [int]$env:PR
-              source_path = "${{ github.workspace }}"
-              port = [int]$env:APP_PORT
+          # Convert Windows backslashes to forward slashes for valid JSON
+          $cleanWorkspace = $env:GITHUB_WORKSPACE.Replace('\', '/')
+
+          $headers = @{
+            "Authorization" = "Bearer ${{ secrets.PREVIEW_CONTROLLER_TOKEN }}"
+            "Content-Type"  = "application/json"
+          }
+
+          $body = @{
+            repo        = "${{ github.event.repository.name }}"
+            pr          = [int]${{ github.event.pull_request.number }}
+            source_path = $cleanWorkspace
+            port        = [int]${{ env.APP_PORT }}
           } | ConvertTo-Json -Compress
 
-          $response = curl.exe -sS --fail-with-body --max-time 900 `
-              -H "Authorization: Bearer $env:TOKEN" `
-              -H "Content-Type: application/json" `
-              -d $bodyData "$env:CONTROLLER_URL/previews"
-
-          $url = ($response | ConvertFrom-Json).url
-          echo "url=$url" >> $env:GITHUB_OUTPUT
+          try {
+            $response = Invoke-RestMethod -Uri "${{ env.CONTROLLER_URL }}/previews" -Method Post -Headers $headers -Body $body
+            Write-Host "Preview created successfully: $($response.url)"
+            echo "url=$($response.url)" >> $env:GITHUB_OUTPUT
+          } catch {
+            if ($_.Exception.Response) {
+              $stream = $_.Exception.Response.GetResponseStream()
+              $reader = New-Object System.IO.StreamReader($stream)
+              Write-Host "Controller error: $($reader.ReadToEnd())"
+            } else {
+              Write-Host "Error: $($_.Exception.Message)"
+            }
+            exit 1
+          }
 
       - name: Comment preview URL on the PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          URL: ${{ steps.preview.outputs.url }}
-          SHA: ${{ github.event.pull_request.head.sha }}
         shell: powershell
         run: |
-          $shortSha = $env:SHA.Substring(0, 7)
-          $body = "Preview for ``$shortSha``: $env:URL`n`n_Removed automatically when this PR is closed._"
-          
-          gh pr comment "${{ github.event.pull_request.number }}" `
-            --repo "${{ github.repository }}" `
-            --edit-last --create-if-none `
-            --body $body
+          $prNumber = "${{ github.event.pull_request.number }}"
+          $repo = "${{ github.repository }}"
+          $sha = "${{ github.event.pull_request.head.sha }}".Substring(0, 7)
+          $previewUrl = "${{ steps.preview.outputs.url }}"
+
+          $commentHeaders = @{
+            "Authorization" = "Bearer ${{ secrets.GITHUB_TOKEN }}"
+            "Accept"        = "application/vnd.github+json"
+            "User-Agent"    = "GitHubActions"
+          }
+          $commentBody = @{
+            body = "Preview for `$sha`: $previewUrl`n`n_Removed automatically when this PR is closed._"
+          } | ConvertTo-Json
+
+          Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/issues/$prNumber/comments" -Method Post -Headers $commentHeaders -Body $commentBody
 
   cleanup:
     if: github.event.action == 'closed'
     runs-on: self-hosted
     steps:
       - name: Delete preview
-        env:
-          TOKEN: ${{ secrets.PREVIEW_CONTROLLER_TOKEN }}
-          REPO_NAME: ${{ github.event.repository.name }}
-          PR: ${{ github.event.pull_request.number }}
         shell: powershell
         run: |
-          curl.exe -sS -o NUL -X DELETE `
-            -H "Authorization: Bearer $env:TOKEN" `
-            "$env:CONTROLLER_URL/previews/$env:REPO_NAME/$env:PR"
+          $headers = @{
+            "Authorization" = "Bearer ${{ secrets.PREVIEW_CONTROLLER_TOKEN }}"
+          }
+          $repo = "${{ github.event.repository.name }}"
+          $pr = "${{ github.event.pull_request.number }}"
+          try {
+            Invoke-RestMethod -Uri "${{ env.CONTROLLER_URL }}/previews/$repo/$pr" -Method Delete -Headers $headers
+          } catch {
+            # 404 is fine if preview wasn't created
+          }
