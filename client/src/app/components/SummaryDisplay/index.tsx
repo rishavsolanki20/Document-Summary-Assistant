@@ -69,7 +69,7 @@ export const SummaryDisplay = ({
 
 const Div = styled.div`
   padding: 1.5rem;
-  border: 1px solid #9ee6a4;
+  border: 1px solid yellow;
   max-width: 600px;
   margin: 1rem auto;
   border-radius: 8px;
