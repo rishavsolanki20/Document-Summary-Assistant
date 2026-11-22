@@ -38,7 +38,7 @@ jobs:
               pr = [int]$env:PR
               source_path = "${{ github.workspace }}"
               port = [int]$env:APP_PORT
-          } | ConvertTo-Json
+          } | ConvertTo-Json -Compress
 
           $response = curl.exe -sS --fail-with-body --max-time 900 `
               -H "Authorization: Bearer $env:TOKEN" `
