@@ -31,7 +31,7 @@ jobs:
           TOKEN: ${{ secrets.PREVIEW_CONTROLLER_TOKEN }}
           REPO_NAME: ${{ github.event.repository.name }}
           PR: ${{ github.event.pull_request.number }}
-        shell: "C:\Program Files\Git\bin\bash.exe {0}"
+        shell: "C:/Program Files/Git/bin/bash.exe {0}"
         run: |
           body="$(jq -n \
             --arg repo "$REPO_NAME" --argjson pr "$PR" \
@@ -50,7 +50,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           URL: ${{ steps.preview.outputs.url }}
           SHA: ${{ github.event.pull_request.head.sha }}
-        shell: "C:\Program Files\Git\bin\bash.exe {0}"
+        shell: "C:/Program Files/Git/bin/bash.exe {0}"
         run: |
           gh pr comment "${{ github.event.pull_request.number }}" \
             --repo "${{ github.repository }}" \
@@ -68,7 +68,7 @@ jobs:
           TOKEN: ${{ secrets.PREVIEW_CONTROLLER_TOKEN }}
           REPO_NAME: ${{ github.event.repository.name }}
           PR: ${{ github.event.pull_request.number }}
-        shell: "C:\Program Files\Git\bin\bash.exe {0}"
+        shell: "C:/Program Files/Git/bin/bash.exe {0}"
         run: |
           curl -sS -o /dev/null -X DELETE \
             -H "Authorization: Bearer ${TOKEN}" \
