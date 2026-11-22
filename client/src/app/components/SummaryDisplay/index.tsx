@@ -84,7 +84,7 @@ const Div = styled.div`
 
 const StyledHeading = styled.h3`
   position: relative;
-  font-size: 2rem;
+  font-size: 3rem;
   text-align: center;
   color: #000000;
   z-index: 1;
