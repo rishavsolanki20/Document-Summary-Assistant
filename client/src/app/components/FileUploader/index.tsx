@@ -258,7 +258,7 @@ const Button = styled.button<{ isActive: boolean }>`
   padding: 0.5rem 1rem;
   background: ${props =>
     props.isActive
-      ? 'linear-gradient(135deg, #1b1b1b, #4c4c4c, #9e9e9e, #4c4c4c,#2d2d2d, #1b1b1b)' // Dark at edges, greyish in the center
+      ? 'linear-gradient(135deg, #fe0a0a, #4c4c4c, #9e9e9e, #4c4c4c,#2d2d2d, #1b1b1b)' // Dark at edges, greyish in the center
       : '#cccccc'};
   color: white;
   border: none;
